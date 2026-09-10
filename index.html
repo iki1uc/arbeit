@@ -1,558 +1,1078 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌀 HOLOGRAMM‑BEWEIS · ORIGINAL · 120° · MOVE · ATTACK</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #05070e;
-            color: #c0d0d0;
-            font-family: 'Segoe UI', 'Consolas', monospace;
-            overflow: hidden;
-            height: 100vh;
-        }
-        #stage {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ ARBEIT · RESPO · INDEX · 3-9-81</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#05070e; --fg:#c0d0d0;
+    --cyan:#6cf; --gold:#f0d080; --purple:#b388ff;
+    --green:#8cf0d0; --red:#ff6666; --orange:#ff8c00;
+    --line:rgba(120,220,150,0.08);
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas','Segoe UI',monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
-        #ui {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(6, 8, 16, 0.8);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            border: 1px solid rgba(120, 220, 150, 0.15);
-            padding: 10px 18px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px 12px;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            max-width: 95vw;
-            pointer-events: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-        }
-        #ui button {
-            background: rgba(20, 28, 20, 0.5);
-            border: 1px solid rgba(120, 220, 150, 0.2);
-            border-radius: 10px;
-            padding: 5px 14px;
-            color: #c0d8c8;
-            font-family: inherit;
-            font-size: 11px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        #ui button:hover {
-            border-color: #7ee0a0;
-            background: rgba(80, 180, 110, 0.15);
-            color: #fff;
-        }
-        #ui button.active {
-            border-color: #f0d080;
-            color: #f0d080;
-        }
-        #ui button.lock {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
-        }
-        #ui .sep {
-            width: 1px;
-            height: 24px;
-            background: rgba(120, 220, 150, 0.1);
-        }
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(6,8,16,0.85);
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 {
+    font-size: 16px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg,#7ee0a0,#d8f0c0,#b388ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header h1 small {
+    font-size: 10px;
+    color: #5a7a8a;
+    -webkit-text-fill-color: #5a7a8a;
+    letter-spacing: 1px;
+    margin-left: 8px;
+  }
+  .status-leds {
+    display: flex;
+    gap: 14px;
+    font-size: 10px;
+    color: #6a8a7a;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .led {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #3a3a3a;
+    margin-right: 5px;
+    transition: 0.3s;
+  }
+  .led.on { background: #8cf0d0; box-shadow: 0 0 6px #8cf0d0; }
+  .led.master { background: #b388ff; box-shadow: 0 0 6px #b388ff; }
+  .led.warn { background: #f0d080; box-shadow: 0 0 6px #f0d080; }
+  .led.pulse { animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
-        #status {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 8px 16px;
-            font-size: 10px;
-            color: #6a8a7a;
-            border: 1px solid rgba(120, 220, 150, 0.06);
-            pointer-events: none;
-            z-index: 10;
-            line-height: 1.6;
-            text-align: right;
-            min-width: 120px;
-        }
-        #status .val {
-            color: #a0e0b0;
-            font-weight: bold;
-        }
-        #status .gold {
-            color: #f0d080;
-        }
-        #status .purple {
-            color: #b388ff;
-        }
+  /* ── MAIN GRID ──────────────────────────────────── */
+  #main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr 260px;
+    overflow: hidden;
+    gap: 0;
+  }
+  @media (max-width: 900px) {
+    #main { grid-template-columns: 1fr; }
+    .col { display: none; }
+    #center { display: block !important; }
+  }
 
-        #masterRespo {
-            position: absolute;
-            top: 16px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 8px 16px;
-            font-size: 10px;
-            color: #8aa8a0;
-            border: 1px solid rgba(179, 136, 255, 0.12);
-            pointer-events: none;
-            z-index: 10;
-            line-height: 1.6;
-            min-width: 150px;
-        }
-        #masterRespo .title {
-            color: #b388ff;
-            font-weight: 600;
-            letter-spacing: 1px;
-            font-size: 11px;
-        }
+  .col {
+    padding: 12px;
+    overflow-y: auto;
+    background: rgba(6,8,16,0.6);
+  }
+  #left { border-right: 1px solid var(--line); }
+  #right { border-left: 1px solid var(--line); }
 
-        #log {
-            position: absolute;
-            bottom: 90px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            border-radius: 10px;
-            padding: 6px 12px;
-            font-size: 9px;
-            color: #5a7a6a;
-            max-height: 80px;
-            overflow-y: auto;
-            border: 1px solid rgba(120, 220, 150, 0.06);
-            pointer-events: none;
-            z-index: 10;
-            width: 240px;
-            line-height: 1.4;
-        }
-        #log .entry {
-            border-bottom: 1px solid rgba(100, 180, 150, 0.03);
-            padding: 1px 0;
-        }
-        #log .time {
-            color: #2a3a3a;
-        }
-        #log .msg {
-            color: #8aa8a0;
-        }
-    </style>
+  .panel-title {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(255,215,0,0.08);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-title .badge {
+    font-size: 8px;
+    color: #5a7a8a;
+    font-weight: 400;
+  }
+
+  /* ── MODUL-LISTE ───────────────────────────────── */
+  .module-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    font-size: 10px;
+    color: #8aa8a0;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: 0.15s;
+    margin-bottom: 2px;
+  }
+  .module-item:hover {
+    background: rgba(120,220,150,0.04);
+    color: #d0e8e0;
+    border-left-color: #7ee0a0;
+  }
+  .module-item.active {
+    background: rgba(120,220,150,0.06);
+    border-left-color: var(--green);
+    color: #d0e8e0;
+  }
+  .module-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #3a3a3a;
+    flex-shrink: 0;
+    transition: 0.3s;
+  }
+  .module-item.active .dot {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+  }
+  .module-item .name { flex: 1; }
+  .module-item .size { font-size: 8px; color: #4a5a5a; }
+  .module-item.disabled { opacity: 0.4; }
+
+  /* ── ORBIT ─────────────────────────────────────── */
+  #center {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  #orbitWrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #orbitCanvas {
+    background: transparent;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  #orbitOverlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 10px;
+    color: #6a8a7a;
+    line-height: 1.6;
+    pointer-events: none;
+  }
+  #orbitOverlay .v { color: #a0e0b0; font-weight: bold; }
+  #orbitOverlay .gold { color: var(--gold); }
+  #orbitOverlay .purple { color: var(--purple); }
+
+  /* ── ARBEIT / RESPO PANEL ──────────────────────── */
+  .arbeit-panel {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(120,220,150,0.04);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 10px;
+  }
+  .arbeit-panel .head {
+    color: var(--gold);
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,215,0,0.06);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    font-size: 10px;
+  }
+  .metric-row .label { color: #8aa8a0; }
+  .metric-row .val { font-weight: bold; color: #d0e8e0; }
+  .metric-row .val.gold { color: var(--gold); }
+  .metric-row .val.green { color: var(--green); }
+  .metric-row .val.purple { color: var(--purple); }
+  .metric-row .val.red { color: var(--red); }
+
+  /* Fortschrittsbalken */
+  .prog-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(20,28,20,0.6);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .prog-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7ee0a0, #b388ff);
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+
+  /* ── 2me-BUTTONS ───────────────────────────────── */
+  .me2-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .me2-buttons button {
+    flex: 1;
+    min-width: 55px;
+    background: rgba(20,20,30,0.6);
+    border: 1px solid rgba(179,136,255,0.2);
+    color: var(--purple);
+    padding: 4px 0;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 9px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .me2-buttons button:hover { background: rgba(179,136,255,0.1); }
+  .me2-buttons button.active {
+    background: rgba(179,136,255,0.2);
+    color: #fff;
+    border-color: var(--purple);
+  }
+
+  /* ── HDF-BAR ───────────────────────────────────── */
+  #hdfBar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.4);
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+    flex-wrap: wrap;
+  }
+  #hdfBar label { color: #6a8a7a; letter-spacing: 1px; }
+  #hdfBar input {
+    background: rgba(20,28,20,0.6);
+    border: 1px solid rgba(120,220,150,0.15);
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: #d0e8e0;
+    font-family: inherit;
+    font-size: 10px;
+    min-width: 180px;
+    flex: 1;
+  }
+  #hdfBar button {
+    background: rgba(20,28,20,0.6);
+    border: 1px solid rgba(120,220,150,0.2);
+    border-radius: 6px;
+    padding: 4px 14px;
+    color: #d0e8e0;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  #hdfBar button:hover { border-color: #7ee0a0; color: #fff; }
+  #hdfOut { color: var(--green); font-size: 9px; }
+
+  /* ── LOG ───────────────────────────────────────── */
+  #logBox {
+    max-height: 110px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.5);
+    border-top: 1px solid var(--line);
+    font-size: 9px;
+    line-height: 1.5;
+    color: #8ab0c0;
+  }
+  #logBox .entry {
+    padding: 1px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  #logBox .time { color: #3a4a5a; margin-right: 6px; }
+  #logBox .tag { color: var(--cyan); margin-right: 4px; }
+  #logBox .ok { color: var(--green); }
+  #logBox .warn { color: var(--gold); }
+  #logBox .err { color: var(--red); }
+
+  /* ── FOOTER ────────────────────────────────────── */
+  footer {
+    padding: 6px 16px;
+    background: rgba(6,8,16,0.85);
+    border-top: 1px solid var(--line);
+    font-size: 9px;
+    color: #445555;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  footer .gold { color: var(--gold); }
+  footer .purple { color: var(--purple); }
+  footer .green { color: var(--green); }
+</style>
 </head>
 <body>
 
-    <div id="stage">
-        <canvas id="canvas"></canvas>
+<header>
+  <h1>⚙️ ARBEIT · RESPO · INDEX <small>brain · 3-9-81 · working state</small></h1>
+  <div class="status-leds">
+    <span><span class="led" id="ledMaster"></span>MASTER</span>
+    <span><span class="led on pulse" id="ledArbeit"></span>ARBEIT</span>
+    <span>Respo <span id="hdrRespo" style="color:#8cf0d0;font-weight:bold;">0%</span></span>
+    <span>KlicK <span id="hdrKlick" style="color:#f0d080;font-weight:bold;">0</span></span>
+    <span>ZacK <span id="hdrZack" style="color:#f0d080;font-weight:bold;">0</span></span>
+    <span id="hdrClock" style="color:#4a5a5a;">⏱️ --:--</span>
+  </div>
+</header>
 
-        <div id="masterRespo">
-            <div class="title">⚡ MASTER‑RESPO</div>
-            <div>Respo: <span class="val" id="mrRespo">0%</span></div>
-            <div>Gear: <span class="gold" id="mrGear">0</span></div>
-            <div>Zeit: <span class="gold" id="mrTime">0.0s</span></div>
-            <div>Kraft: <span class="val" id="mrKraft">0</span></div>
-        </div>
+<div id="main">
 
-        <div id="status">
-            <div>🌀 MODUL <span class="val" id="stModul">ATTACK</span></div>
-            <div>⚡ RESPO <span class="val" id="stRespo">0%</span></div>
-            <div>⏱ TICK <span class="gold" id="stTick">0</span></div>
-            <div>🔒 <span class="purple" id="stLock">frei</span></div>
-        </div>
+  <!-- ── LINKS: MODULE ──────────────────────────── -->
+  <div class="col" id="left">
+    <div class="panel-title">
+      <span>🧩 BRAIN · MODULE</span>
+      <span class="badge" id="modCount">0/15</span>
+    </div>
+    <div id="moduleList"></div>
 
-        <div id="log"></div>
+    <div class="panel-title" style="margin-top:14px;">
+      <span>🌀 AXIOM · MODI</span>
+    </div>
+    <div class="me2-buttons">
+      <button data-mode="IQQ" class="active">IQQ</button>
+      <button data-mode="OCTA">OCTA</button>
+      <button data-mode="A81">A81</button>
+    </div>
+  </div>
 
-        <div id="ui">
-            <button id="btnPose1">🔺 Offen</button>
-            <button id="btnPose2" class="active">💎 Diamant</button>
-            <button id="btnPose3">⚡ Kill‑Bill</button>
-            <button id="btnPose4">🌀 360°</button>
-            <span class="sep"></span>
-            <button id="btnHold">✋ HALTEN</button>
-            <button id="btnMove">🔄 BEWEGEN</button>
-            <button class="lock" id="btnFix">🔒 FIXIEREN</button>
-            <span class="sep"></span>
-            <button id="btnAttack">🔥 ATTACK</button>
-            <button id="btnReset">⟲ RESET</button>
-        </div>
+  <!-- ── MITTE: ORBIT ───────────────────────────── -->
+  <div id="center">
+    <div id="orbitWrap">
+      <canvas id="orbitCanvas"></canvas>
+      <div id="orbitOverlay">
+        <div>🌀 <span class="v" id="ovMode">IQQ</span> · Tick <span class="v gold" id="ovTick">0</span></div>
+        <div>◎ Symbol <span class="v purple" id="ovSymbol">◉</span> · #<span class="v" id="ovIndex">0</span></div>
+        <div>⚡ Arbeit <span class="v gold" id="ovArbeit">0%</span></div>
+      </div>
     </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    <!-- Arbeit / Respo Kurzpanel -->
+    <div class="arbeit-panel" style="margin-top:10px;">
+      <div class="head">
+        <span>📊 ARBEIT · RESPO</span>
+        <span id="arbeitBadge">bereit</span>
+      </div>
+      <div class="metric-row"><span class="label">Fortschritt</span><span class="val gold" id="mpProg">0%</span></div>
+      <div class="prog-bar"><div class="fill" id="mpBar" style="width:0%;"></div></div>
+      <div class="metric-row" style="margin-top:6px;"><span class="label">Aktive Module</span><span class="val green" id="mpActive">0</span></div>
+      <div class="metric-row"><span class="label">Respo-Score</span><span class="val purple" id="mpRespo">0.00</span></div>
+      <div class="metric-row"><span class="label">4× Genauigkeit</span><span class="val" id="mpAcc4x">–</span></div>
+      <div class="metric-row"><span class="label">2× Prüfbarkeit</span><span class="val" id="mpVer2x">–</span></div>
+    </div>
+  </div>
 
-    <script type="module">
-        // ================================================================
-        //  HOLOGRAMM‑BEWEIS · ORIGINAL · 120° · MOVE · ATTACK
-        //  Atomar verhaltensorientiert – 120°-Screens, Respo-9×9, Orbit,
-        //  Halten/Bewegen/Fixieren, Kill-Bill-Move & Attack-Posen.
-        //  Korrigierte Geometrie: keine "verkehrten" Screens mehr.
-        // ================================================================
+  <!-- ── RECHTS: 2me · ZaM · KLICK ──────────────── -->
+  <div class="col" id="right">
 
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <div class="panel-title">
+      <span>👁️ 2me · MASTER</span>
+      <span class="badge" id="me2Role">allow</span>
+    </div>
+    <div class="me2-buttons">
+      <button id="btnAllow" class="active">ALLOW</button>
+      <button id="btnBoost">BOOST</button>
+      <button id="btnSlow">SLOW</button>
+      <button id="btnOverride">OVERRIDE</button>
+    </div>
 
-        // ─── LOG ──────────────────────────────────────────────────────────
-        const logBox = document.getElementById('log');
-        function log(msg) {
-            const t = new Date().toLocaleTimeString();
-            const e = document.createElement('div');
-            e.className = 'entry';
-            e.innerHTML = `<span class="time">[${t}]</span> <span class="msg">${msg}</span>`;
-            logBox.appendChild(e);
-            logBox.scrollTop = logBox.scrollHeight;
-            if (logBox.children.length > 30) logBox.removeChild(logBox.firstChild);
-        }
+    <div class="panel-title" style="margin-top:12px;">
+      <span>⚡ ZaM · SEQUENZ</span>
+      <span class="badge" id="zamState">idle</span>
+    </div>
+    <div class="me2-buttons">
+      <button id="btnZamRun">▶ RUN</button>
+      <button id="btnZamStop">⏸ STOP</button>
+    </div>
+    <div class="metric-row" style="margin-top:6px;">
+      <span class="label">Letzte Sequenz</span>
+      <span class="val" id="zamLast">–</span>
+    </div>
 
-        // ─── THREE.JS SETUP ─────────────────────────────────────────────
-        const canvas = document.getElementById('canvas');
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+    <div class="panel-title" style="margin-top:12px;">
+      <span>🔘 KLICK · ZACK</span>
+      <span class="badge" id="klickState">idle</span>
+    </div>
+    <div class="metric-row"><span class="label">KlicK</span><span class="val gold" id="klickCount">0</span></div>
+    <div class="metric-row"><span class="label">ZacK</span><span class="val gold" id="zackCount">0</span></div>
+    <div class="metric-row"><span class="label">Bis ZacK</span><span class="val" id="klickRemain">100</span></div>
+    <div class="me2-buttons">
+      <button id="btnKlick">🔘 KLICK</button>
+      <button id="btnZackReset">⟲</button>
+    </div>
 
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x05070e);
-        scene.fog = new THREE.Fog(0x05070e, 8, 18);
+    <div class="panel-title" style="margin-top:12px;">
+      <span>🔒 ZOLL</span>
+      <span class="badge" id="zollState">offen</span>
+    </div>
+    <div class="metric-row"><span class="label">Status</span><span class="val green" id="zollStatus">offen</span></div>
 
-        const camera = new THREE.PerspectiveCamera(38, canvas.clientWidth / canvas.clientHeight, 0.1, 30);
-        camera.position.set(5, 3.5, 7);
+  </div>
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.06;
-        controls.target.set(0, 0.3, 0);
-        controls.minDistance = 3;
-        controls.maxDistance = 16;
-        controls.update();
+</div>
 
-        // ─── LIGHTS ──────────────────────────────────────────────────────
-        scene.add(new THREE.AmbientLight(0x222244, 0.6));
-        const dLight = new THREE.DirectionalLight(0xffeedd, 2.2);
-        dLight.position.set(6, 10, 8);
-        dLight.castShadow = true;
-        scene.add(dLight);
-        scene.add(new THREE.DirectionalLight(0x4488ff, 0.5).position.set(-4, 2, -4));
-        scene.add(new THREE.DirectionalLight(0x88ddff, 0.3).position.set(0, -2, 5));
+<!-- ── HDF-BAR ───────────────────────────────────── -->
+<div id="hdfBar">
+  <label>📖 HDF‑RESOLVE</label>
+  <input id="hdfInput" placeholder="#d / #e / #axiom / #81 / #zauber.6" value="#d">
+  <button id="hdfBtn">RESOLVE</button>
+  <span id="hdfOut">–</span>
+</div>
 
-        // ─── BODEN / GITTER ─────────────────────────────────────────────
-        const gridHelper = new THREE.GridHelper(5.5, 11, 0x44aa77, 0x226644);
-        gridHelper.position.y = -0.65;
-        scene.add(gridHelper);
+<!-- ── LOG ───────────────────────────────────────── -->
+<div id="logBox">
+  <div class="entry"><span class="time">[init]</span><span class="tag">arbeit</span><span class="ok">Arbeit-Respo-Index geladen · brain/ · 15 Module</span></div>
+</div>
 
-        // ─── RESPO‑MESH (9×9) ──────────────────────────────────────────
-        const RESPO_SIZE = 9;
-        const TOTAL = 81;
-        const respoPositions = new Float32Array(TOTAL * 3);
-        const respoValues = new Float32Array(TOTAL);
-        const respoMeshes = [];
+<footer>
+  <span>⚙️ ARBEIT · <span class="gold">RESPO</span> · INDEX · <span class="purple">3-9-81</span></span>
+  <span>🧩 Module <span class="green" id="ftMod">0</span> · KlicK <span class="green" id="ftKlick">0</span> · ZacK <span class="green" id="ftZack">0</span></span>
+  <span>Leertaste = KlicK · R = Reset · Z = ZaM · M = Modus</span>
+</footer>
 
-        for (let r = 0; r < RESPO_SIZE; r++) {
-            for (let c = 0; c < RESPO_SIZE; c++) {
-                const idx = r * RESPO_SIZE + c;
-                const x = (c / (RESPO_SIZE - 1) - 0.5) * 4.2;
-                const z = (r / (RESPO_SIZE - 1) - 0.5) * 4.2;
-                respoPositions[idx * 3] = x;
-                respoPositions[idx * 3 + 1] = -0.3;
-                respoPositions[idx * 3 + 2] = z;
-                respoValues[idx] = 0.5 + 0.4 * Math.sin(idx * 0.15);
+<script>
+"use strict";
+// ═══════════════════════════════════════════════════════════════════
+// ARBEIT · RESPO · INDEX  —  brain/
+// Repräsentiert den Arbeitsstand der 15 Brain-Module.
+// Kompatibel: KlicK · ZaM · 2me · respo-master.js · admin-pult · STAGE
+// ═══════════════════════════════════════════════════════════════════
 
-                const geo = new THREE.SphereGeometry(0.12, 8, 8);
-                const mat = new THREE.MeshStandardMaterial({
-                    color: 0x44aa77,
-                    emissive: 0x226644,
-                    emissiveIntensity: 0.3,
-                    roughness: 0.2,
-                    metalness: 0.6,
-                });
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.position.set(x, -0.3 + respoValues[idx] * 0.5, z);
-                mesh.castShadow = true;
-                scene.add(mesh);
-                respoMeshes.push({ mesh, idx, x, z, value: respoValues[idx], target: respoValues[idx] });
-            }
-        }
+// ─── 1. KOMPATIBILITÄTS-LAYER (identisch zu allen anderen) ──────
+const MASTER_KEY = 'iki1uc-master-respo';
+const BC_NAME = 'iki1uc-orbit';
 
-        // ─── DREIECK‑SCREENS (120°-Symmetrie, korrigiert) ──────────────
-        const mirrorGroup = new THREE.Group();
-        scene.add(mirrorGroup);
+let masterChannel = null;
+let isMasterConnected = false;
 
-        function createMirror(color, label, angleDeg) {
-            const group = new THREE.Group();
-            const geo = new THREE.PlaneGeometry(1.6, 2.2);
-            const mat = new THREE.MeshStandardMaterial({
-                color,
-                emissive: color,
-                emissiveIntensity: 0.06,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.3,
-                roughness: 0.1,
-                metalness: 0.85,
-            });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            group.add(mesh);
+const localMaster = {
+  stations: {},
+  klick: 0,
+  zack: 0,
+  zam: 'idle',
+  zoll: 'offen',
+  me2: { allow: true, boost: false, slow: false, override: false },
+  lastUpdate: Date.now(),
+};
 
-            const edges = new THREE.EdgesGeometry(geo);
-            const lineMat = new THREE.LineBasicMaterial({ color: 0x88ddbb, transparent: true, opacity: 0.25 });
-            const line = new THREE.LineSegments(edges, lineMat);
-            group.add(line);
+try {
+  const stored = localStorage.getItem(MASTER_KEY);
+  if (stored) Object.assign(localMaster, JSON.parse(stored));
+} catch (_) {}
 
-            // KORREKT: rotateY(angle) dann translateZ(radius) – das ist die richtige Reihenfolge für 120°-Symmetrie
-            const angleRad = angleDeg * Math.PI / 180;
-            group.position.set(Math.sin(angleRad) * 1.4, 0, Math.cos(angleRad) * 1.4);
-            group.rotation.y = -angleRad;
-            group.rotation.x = 0.05;
+try {
+  masterChannel = new BroadcastChannel(BC_NAME);
+  masterChannel.onmessage = (ev) => {
+    const d = ev.data;
+    if (!d || !d.type) return;
 
-            // Label als Sprite
-            const c = document.createElement('canvas');
-            c.width = 128;
-            c.height = 48;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = 'rgba(0,0,0,0)';
-            ctx.fillRect(0, 0, 128, 48);
-            ctx.font = 'bold 18px Consolas';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#88ddbb';
-            ctx.fillText(label, 64, 24);
-            const tex = new THREE.CanvasTexture(c);
-            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
-            const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(0.5, 0.18, 1);
-            sprite.position.z = 0.01;
-            group.add(sprite);
+    if (d.type === 'master:state' && d.payload) {
+      Object.assign(localMaster, d.payload);
+      isMasterConnected = true;
+      updateAll();
+    }
+    if (d.type === 'me2:rule' && d.payload) {
+      Object.assign(localMaster.me2, d.payload);
+      updateAll();
+      syncMe2Buttons();
+      log(`2me: ${Object.entries(d.payload).map(([k,v])=>k+'='+v).join(', ')}`, '2me', 'ok');
+    }
+    if (d.type === 'zam:run') {
+      localMaster.zam = 'run';
+      updateAll();
+      log(`ZaM.run(${d.payload?.sequence?.join('→') || '?'})`, 'ZaM', 'ok');
+      if (d.payload?.steps) runZamSequence(d.payload.steps);
+    }
+    if (d.type === 'klick:step' && d.payload) {
+      localMaster.klick = d.payload.klick ?? localMaster.klick;
+      updateAll();
+    }
+    if (d.type === 'klick:zack' && d.payload) {
+      localMaster.zack = d.payload.zack ?? localMaster.zack;
+      updateAll();
+      log(`🎉 ZacK ${localMaster.zack}`, 'ZaM', 'ok');
+    }
+    if (d.type === 'mainboard:done' && d.payload) {
+      log(`MAINBOARD sim · Kompat ${d.payload.compat?.toFixed(0) ?? '?'}% · 4× ${d.payload.acc4x?.toFixed(0) ?? '–'} · 2× ${d.payload.ver2x ? 'OK' : 'FAIL'}`, 'MAINBOARD', 'ok');
+      document.getElementById('mpAcc4x').textContent = (d.payload.acc4x?.toFixed(0) ?? '–') + '%';
+      document.getElementById('mpVer2x').textContent = d.payload.ver2x ? '✅ OK' : '❌ FAIL';
+    }
+  };
+} catch (e) { console.warn('BC fehlt:', e); }
 
-            mirrorGroup.add(group);
-            return { group, mesh };
-        }
+function persistMaster() {
+  try { localStorage.setItem(MASTER_KEY, JSON.stringify(localMaster)); } catch (_) {}
+}
+function sendToMaster(type, payload) {
+  localMaster.lastUpdate = Date.now();
+  persistMaster();
+  if (masterChannel) {
+    try { masterChannel.postMessage({ type, from: 'ARBEIT', payload, ts: Date.now() }); } catch (_) {}
+  }
+}
 
-        const screens = [
-            createMirror(0x0088ff, 'BOERSE', 0),
-            createMirror(0xff44aa, 'DOM', 120),
-            createMirror(0x88ddff, 'EVO', 240)
-        ];
+// ─── 2. MODULE (aus dem brain/-Ordner) ──────────────────────────
+// Das ist der "Egg"-Inhalt — die Reihenfolge aus deinem Repo.
+const MODULES = [
+  { id:'NC_figur.js',   name:'NC_figur',   desc:'Form-Engine' },
+  { id:'NC_kraft.js',   name:'NC_kraft',   desc:'Kraft-Modell' },
+  { id:'NC_space.js',   name:'NC_space',   desc:'Raum-Modell' },
+  { id:'NC_time.js',    name:'NC_time',    desc:'Zeit-Modell' },
+  { id:'OS_CORE.js',    name:'OS_CORE',    desc:'Grundlogik' },
+  { id:'axiom.map.js',  name:'axiom.map',  desc:'Symbol-Mapping' },
+  { id:'coord.js',      name:'coord',      desc:'Koordinaten' },
+  { id:'dreieck.js',    name:'dreieck',    desc:'Geometrie' },
+  { id:'index.html',    name:'index',      desc:'UI-Einstieg', self:true },
+  { id:'m.md',          name:'m.md',       desc:'Notizen' },
+  { id:'muss.ready',    name:'muss.ready', desc:'Ready-Signal' },
+  { id:'resolver.js',   name:'resolver',   desc:'Zustandsauflösung' },
+  { id:'respo.js',      name:'respo',      desc:'Respo-Kern' },
+  { id:'router.js',     name:'router',     desc:'Modul-Routing' },
+  { id:'vec.js',        name:'vec',        desc:'Vektor-Mathe' },
+];
 
-        // ─── POSEN (Szenarien) ──────────────────────────────────────────
-        const POSES = {
-            offen: {
-                left: { rotY: 30, rotX: 2, posZ: 40 },
-                right: { rotY: -30, rotX: 2, posZ: 40 },
-                front: { rotY: 0, rotX: 8, posZ: 100 }
-            },
-            diamant: {
-                left: { rotY: 12, rotX: 2, posZ: 80 },
-                right: { rotY: -12, rotX: 2, posZ: 80 },
-                front: { rotY: 0, rotX: 13, posZ: 140 }
-            },
-            killbill: {
-                left: { rotY: 40, rotX: -10, posZ: 10 },
-                right: { rotY: -40, rotX: -10, posZ: 10 },
-                front: { rotY: 0, rotX: 4, posZ: 170 }
-            },
-            '360': {
-                left: { rotY: 20, rotX: 0, posZ: 120 },
-                right: { rotY: -20, rotX: 0, posZ: 120 },
-                front: { rotY: 0, rotX: 5, posZ: 200 }
-            }
-        };
+const moduleState = MODULES.map(m => ({ ...m, active: !!m.self }));
 
-        let currentPose = 'diamant';
-        let locked = false;
+function renderModules() {
+  const list = document.getElementById('moduleList');
+  list.innerHTML = '';
+  let activeCount = 0;
+  moduleState.forEach((m, idx) => {
+    if (m.active) activeCount++;
+    const div = document.createElement('div');
+    div.className = 'module-item' + (m.active ? ' active' : '') + (m.self ? '' : '');
+    div.innerHTML = `
+      <span class="dot"></span>
+      <span class="name">${m.name}</span>
+      <span class="size">${m.desc}</span>
+    `;
+    div.addEventListener('click', () => toggleModule(idx));
+    list.appendChild(div);
+  });
+  document.getElementById('modCount').textContent = `${activeCount}/${MODULES.length}`;
+  document.getElementById('ftMod').textContent = activeCount;
+  return activeCount;
+}
 
-        function applyPose(poseName) {
-            if (locked) { log('🔒 Fixiert – erst BEWEGEN klicken'); return; }
-            const p = POSES[poseName];
-            if (!p) return;
-            const groups = mirrorGroup.children;
-            // left: index 0, right: index 1, front: index 2
-            if (groups[0]) {
-                groups[0].position.z = p.left.posZ / 100;
-                groups[0].rotation.y = p.left.rotY * Math.PI / 180;
-                groups[0].rotation.x = p.left.rotX * Math.PI / 180;
-            }
-            if (groups[1]) {
-                groups[1].position.z = p.right.posZ / 100;
-                groups[1].rotation.y = p.right.rotY * Math.PI / 180;
-                groups[1].rotation.x = p.right.rotX * Math.PI / 180;
-            }
-            if (groups[2]) {
-                groups[2].position.z = p.front.posZ / 100;
-                groups[2].rotation.y = p.front.rotY * Math.PI / 180;
-                groups[2].rotation.x = p.front.rotX * Math.PI / 180;
-            }
-            currentPose = poseName;
-            document.getElementById('stModul').textContent = poseName.toUpperCase();
-            log(`🌀 Pose: ${poseName}`);
-        }
+function toggleModule(idx) {
+  const m = moduleState[idx];
+  m.active = !m.active;
+  const count = renderModules();
+  sendToMaster('arbeit:module', { id: m.id, active: m.active, count });
+  log(`Modul ${m.name} → ${m.active ? 'aktiv' : 'inaktiv'}`, 'arbeit', m.active ? 'ok' : 'warn');
+  updateArbeitProgress();
+}
 
-        // ─── ATTACK / MOVE ──────────────────────────────────────────────
-        let attackActive = false;
-        let attackTime = 0;
+// ─── 3. ORBIT (Canvas, Axiom-Symbole) ───────────────────────────
+const ORBIT = ["◉","↗","↘","3","9","↘","↗","◎","↗","↘","3","9","↘","↗",
+               "◎","↗","↘","81","◆","↘","↗","△","↗","↘","27","▣","↘","↗","3","↺"];
+const AXIOM_MAP = {
+  '3':'IQQ','9':'IQQ',
+  '◎':'OCTA','◉':'OCTA','◆':'OCTA','△':'OCTA','▣':'OCTA','↺':'OCTA',
+  '81':'A81','27':'A81','243':'A81','729':'A81'
+};
 
-        function triggerAttack() {
-            if (locked) { log('🔒 Fixiert – Attack blockiert'); return; }
-            attackActive = true;
-            attackTime = 0;
-            log('🔥 ATTACK aktiviert!');
-            // Respo-Werte auf Schock setzen
-            for (const entry of respoMeshes) {
-                entry.target = 0.1 + 0.8 * Math.random();
-            }
-            // Pose kurz extrem verändern (Kill-Bill + Extra)
-            applyPose('killbill');
-            setTimeout(() => {
-                if (currentPose !== 'killbill') applyPose(currentPose);
-                else applyPose('diamant');
-            }, 600);
-        }
+const orbitState = {
+  index: 0,
+  history: [],
+  tick: 0,
+  mode: 'IQQ',
+  running: true,
+  speed: 3,
+  lastFrame: 0,
+  accumulator: 0,
+};
 
-        // ─── UI BUTTONS ──────────────────────────────────────────────────
-        document.getElementById('btnPose1').addEventListener('click', () => applyPose('offen'));
-        document.getElementById('btnPose2').addEventListener('click', () => applyPose('diamant'));
-        document.getElementById('btnPose3').addEventListener('click', () => applyPose('killbill'));
-        document.getElementById('btnPose4').addEventListener('click', () => applyPose('360'));
+const canvas = document.getElementById('orbitCanvas');
+const ctx = canvas.getContext('2d');
 
-        document.getElementById('btnHold').addEventListener('click', () => log('✋ HALTEN → aktuelle Pose fixiert'));
-        document.getElementById('btnMove').addEventListener('click', () => {
-            locked = false;
-            document.getElementById('stLock').textContent = 'frei';
-            log('🔄 BEWEGEN → frei');
-        });
-        document.getElementById('btnFix').addEventListener('click', () => {
-            locked = true;
-            document.getElementById('stLock').textContent = 'fixiert';
-            log('🔒 FIXIEREN → gesperrt');
-        });
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
 
-        document.getElementById('btnAttack').addEventListener('click', triggerAttack);
-        document.getElementById('btnReset').addEventListener('click', () => {
-            locked = false;
-            document.getElementById('stLock').textContent = 'frei';
-            applyPose('diamant');
-            for (const entry of respoMeshes) {
-                entry.target = 0.5 + 0.4 * Math.sin(entry.idx * 0.15);
-                entry.value = entry.target;
-            }
-            attackActive = false;
-            log('⟲ RESET');
-        });
+function drawOrbit() {
+  const w = canvas.width / (window.devicePixelRatio || 1);
+  const h = canvas.height / (window.devicePixelRatio || 1);
+  ctx.clearRect(0, 0, w, h);
 
-        // ─── STATUS UI ──────────────────────────────────────────────────
-        const stRespo = document.getElementById('stRespo');
-        const stTick = document.getElementById('stTick');
-        const mrRespo = document.getElementById('mrRespo');
-        const mrGear = document.getElementById('mrGear');
-        const mrTime = document.getElementById('mrTime');
-        const mrKraft = document.getElementById('mrKraft');
-        let tick = 0;
-        let elapsed = 0;
+  const cx = w / 2;
+  const cy = h / 2;
+  const R = Math.min(w, h) * 0.32;
 
-        // ─── UPDATE LOOP ──────────────────────────────────────────────────
-        function updateRespo() {
-            let sum = 0;
-            for (const entry of respoMeshes) {
-                entry.value += (entry.target - entry.value) * 0.05;
-                const score = Math.max(0, 1 - Math.abs(entry.value - 0.5) * 2);
-                sum += score;
-                const y = -0.3 + entry.value * 0.6;
-                entry.mesh.position.set(entry.x, y, entry.z);
-                const r = 0.2 + 0.6 * score;
-                const g = 0.5 + 0.4 * score;
-                const b = 0.8 - 0.5 * score;
-                entry.mesh.material.color.setRGB(r, g, b);
-                entry.mesh.scale.setScalar(0.5 + score);
-            }
-            const avg = sum / TOTAL;
-            stRespo.textContent = Math.round(avg * 100) + '%';
-            mrRespo.textContent = Math.round(avg * 100) + '%';
-        }
+  // Hintergrund-Ring (Arbeit-Fortschritt)
+  const activeCount = moduleState.filter(m => m.active).length;
+  const progress = activeCount / MODULES.length;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(120,220,150,0.08)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-        function animate() {
-            requestAnimationFrame(animate);
-            tick++;
-            elapsed += 16;
-            stTick.textContent = tick;
-            mrGear.textContent = tick % 12;
-            mrTime.textContent = (elapsed / 1000).toFixed(1) + 's';
-            mrKraft.textContent = Math.round(30 + 20 * Math.sin(tick * 0.02));
+  // Fortschritts-Bogen
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, -Math.PI/2, -Math.PI/2 + progress * Math.PI * 2);
+  ctx.strokeStyle = 'rgba(179,136,255,0.6)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
 
-            if (attackActive) {
-                attackTime++;
-                if (attackTime < 30) {
-                    for (const entry of respoMeshes) {
-                        entry.target += (0.2 * Math.sin(attackTime * 0.2 + entry.idx) - entry.target) * 0.05;
-                    }
-                } else {
-                    attackActive = false;
-                    for (const entry of respoMeshes) {
-                        entry.target = 0.5 + 0.4 * Math.sin(entry.idx * 0.15 + tick * 0.01);
-                    }
-                    log('⚡ Attack abgeklungen');
-                }
-            }
+  // Innerer Ring (Tick)
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.7, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(120,220,150,0.05)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-            updateRespo();
-            controls.update();
-            renderer.render(scene, camera);
-        }
+  // Orbit-Symbole rund um den Ring
+  const numSym = 8;
+  const symIndexes = [];
+  for (let i = 0; i < numSym; i++) {
+    symIndexes.push((orbitState.index + i * 4) % ORBIT.length);
+  }
+  symIndexes.forEach((symIdx, i) => {
+    const angle = (i / numSym) * Math.PI * 2 + orbitState.tick * 0.005;
+    const x = cx + Math.cos(angle) * R;
+    const y = cy + Math.sin(angle) * R;
+    const sym = ORBIT[symIdx];
+    const isMain = i === 0;
+    ctx.fillStyle = isMain ? '#6cf' : 'rgba(108,204,255,0.35)';
+    ctx.font = (isMain ? 22 : 14) + 'px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (isMain) { ctx.shadowColor = '#6cf'; ctx.shadowBlur = 14; }
+    ctx.fillText(sym, x, y);
+    ctx.shadowBlur = 0;
+  });
 
-        // ─── RESIZE ──────────────────────────────────────────────────────
-        function resize() {
-            const w = canvas.parentElement.clientWidth;
-            const h = canvas.parentElement.clientHeight;
-            renderer.setSize(w, h, false);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-        }
-        window.addEventListener('resize', resize);
-        resize();
+  // Kern (Arbeit)
+  const pulse = 1 + 0.08 * Math.sin(orbitState.tick * 0.06);
+  const coreR = R * 0.35 * pulse;
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+  grad.addColorStop(0, 'rgba(179,136,255,0.7)');
+  grad.addColorStop(0.6, 'rgba(179,136,255,0.25)');
+  grad.addColorStop(1, 'rgba(179,136,255,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
 
-        // ─── INIT ────────────────────────────────────────────────────────
-        applyPose('diamant');
-        log('🌀 HOLOGRAMM‑BEWEIS · ORIGINAL geladen');
-        log('🖱️ Maus ziehen = Orbit · Buttons steuern Pose & Attack');
-        log('⌨️  a=Attack  1-4=Posen  r=Reset');
-        animate();
+  // Mittiges Symbol
+  const symbol = ORBIT[orbitState.index];
+  ctx.fillStyle = '#d0e8e0';
+  ctx.font = 'bold 32px Consolas';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#b388ff';
+  ctx.shadowBlur = 20;
+  ctx.fillText(symbol, cx, cy);
+  ctx.shadowBlur = 0;
 
-        // ─── TASTATUR ────────────────────────────────────────────────────
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'a' || e.key === 'A') triggerAttack();
-            if (e.key === '1') applyPose('offen');
-            if (e.key === '2') applyPose('diamant');
-            if (e.key === '3') applyPose('killbill');
-            if (e.key === '4') applyPose('360');
-            if (e.key === 'r' || e.key === 'R') document.getElementById('btnReset').click();
-            if (e.key === 'f' || e.key === 'F') document.getElementById('btnFix').click();
-            if (e.key === 'm' || e.key === 'M') document.getElementById('btnMove').click();
-        });
-    </script>
+  // Info unten
+  ctx.fillStyle = 'rgba(90,122,138,0.7)';
+  ctx.font = '10px Consolas';
+  ctx.textAlign = 'center';
+  ctx.fillText(`#${orbitState.index} · ${AXIOM_MAP[symbol] || '—'} · ${orbitState.mode}`, cx, cy + R + 26);
+}
 
+// ─── 4. LOOP ───────────────────────────────────────────────────
+const STEP_BASE = 800, STEP_FACTOR = 60, STEP_MIN = 100;
+function loop(now) {
+  if (!orbitState.lastFrame) orbitState.lastFrame = now;
+  const delta = now - orbitState.lastFrame;
+  orbitState.lastFrame = now;
+
+  if (orbitState.running && localMaster.me2.allow) {
+    orbitState.accumulator += delta;
+    const stepTime = Math.max(STEP_MIN, STEP_BASE - orbitState.speed * STEP_FACTOR);
+    let guard = 0;
+    while (orbitState.accumulator >= stepTime && guard < 8) {
+      stepOrbit();
+      orbitState.accumulator -= stepTime;
+      guard++;
+    }
+  }
+
+  orbitState.tick++;
+  drawOrbit();
+  requestAnimationFrame(loop);
+}
+
+function stepOrbit() {
+  orbitState.index = (orbitState.index + 1) % ORBIT.length;
+  orbitState.history.push(orbitState.index);
+  if (orbitState.history.length > 5) orbitState.history.shift();
+  orbitState.tick++;
+
+  document.getElementById('ovIndex').textContent = orbitState.index;
+  document.getElementById('ovSymbol').textContent = ORBIT[orbitState.index];
+  document.getElementById('ovTick').textContent = orbitState.tick;
+
+  sendToMaster('arbeit:step', {
+    index: orbitState.index,
+    symbol: ORBIT[orbitState.index],
+    axiom: AXIOM_MAP[ORBIT[orbitState.index]] || '—',
+    mode: orbitState.mode,
+    tick: orbitState.tick,
+  });
+}
+
+// ─── 5. KLICK-ZÄHLER (99 → ZacK 1) ───────────────────────────────
+let klickCounter = localMaster.klick || 0;
+let zackCounter = localMaster.zack || 0;
+
+function addKlick(n = 1) {
+  if (!localMaster.me2.allow) {
+    log('⛔ KlicK blockiert – Zoll geschlossen', 'Zoll', 'err');
+    return;
+  }
+  const mult = localMaster.me2.boost ? 2 : (localMaster.me2.slow ? 0.5 : 1);
+  klickCounter += n * mult;
+  if (klickCounter >= 100) {
+    const gained = Math.floor(klickCounter / 100);
+    klickCounter = klickCounter % 100;
+    zackCounter += gained;
+    log(`🎉 100 KlicK → ${gained} ZacK (total ${zackCounter})`, 'ZaM', 'ok');
+    sendToMaster('klick:zack', { zack: zackCounter, fromKlick: 100 });
+  }
+  localMaster.klick = klickCounter;
+  localMaster.zack = zackCounter;
+  persistMaster();
+  updateAll();
+  sendToMaster('klick:step', { klick: klickCounter, zack: zackCounter });
+}
+
+function resetKlick() {
+  klickCounter = 0;
+  zackCounter = 0;
+  localMaster.klick = 0;
+  localMaster.zack = 0;
+  persistMaster();
+  updateAll();
+  log('⟲ KlicK/ZacK zurückgesetzt', 'KlicK', 'warn');
+}
+
+// ─── 6. ZaM-SEQUENZ ─────────────────────────────────────────────
+function runZamSequence(steps) {
+  log(`ZaM-Sequenz: ${steps.join(' → ')}`, 'ZaM', 'ok');
+  localMaster.zam = 'run';
+  updateAll();
+  let i = 0;
+  const next = () => {
+    if (i >= steps.length) {
+      localMaster.zam = 'done';
+      updateAll();
+      sendToMaster('zam:done', { sequence: steps });
+      log(`✅ ZaM-Sequenz fertig (${steps.length} Schritte)`, 'ZaM', 'ok');
+      return;
+    }
+    const step = steps[i++];
+    log(`  ↳ ${step}`, 'ZaM');
+    stepOrbit();
+    addKlick(1);
+    if (String(step).toUpperCase().includes('MAINBOARD')) {
+      sendToMaster('mainboard:run', { source: 'ZaM' });
+    }
+    setTimeout(next, 320);
+  };
+  next();
+}
+
+// ─── 7. 2me-BUTTONS ─────────────────────────────────────────────
+function syncMe2Buttons() {
+  document.getElementById('btnAllow').classList.toggle('active', localMaster.me2.allow);
+  document.getElementById('btnBoost').classList.toggle('active', localMaster.me2.boost);
+  document.getElementById('btnSlow').classList.toggle('active', localMaster.me2.slow);
+  document.getElementById('btnOverride').classList.toggle('active', localMaster.me2.override);
+
+  const roles = [];
+  if (localMaster.me2.allow) roles.push('ALLOW');
+  if (localMaster.me2.boost) roles.push('BOOST');
+  if (localMaster.me2.slow) roles.push('SLOW');
+  if (localMaster.me2.override) roles.push('OVERRIDE');
+  document.getElementById('me2Role').textContent = roles.join('·') || 'IDLE';
+  document.getElementById('zollState').textContent = localMaster.me2.allow ? 'offen' : 'blockiert';
+  document.getElementById('zollStatus').textContent = localMaster.me2.allow ? 'offen' : 'blockiert';
+  document.getElementById('zollStatus').className = 'val ' + (localMaster.me2.allow ? 'green' : 'red');
+}
+
+document.getElementById('btnAllow').addEventListener('click', () => {
+  localMaster.me2.allow = !localMaster.me2.allow;
+  sendToMaster('me2:rule', { allow: localMaster.me2.allow });
+  syncMe2Buttons();
+  log(`Zoll → ${localMaster.me2.allow ? 'offen' : 'blockiert'}`, '2me', 'warn');
+});
+document.getElementById('btnBoost').addEventListener('click', () => {
+  localMaster.me2.boost = !localMaster.me2.boost;
+  if (localMaster.me2.boost) localMaster.me2.slow = false;
+  sendToMaster('me2:rule', { boost: localMaster.me2.boost, slow: localMaster.me2.slow });
+  syncMe2Buttons();
+});
+document.getElementById('btnSlow').addEventListener('click', () => {
+  localMaster.me2.slow = !localMaster.me2.slow;
+  if (localMaster.me2.slow) localMaster.me2.boost = false;
+  sendToMaster('me2:rule', { boost: localMaster.me2.boost, slow: localMaster.me2.slow });
+  syncMe2Buttons();
+});
+document.getElementById('btnOverride').addEventListener('click', () => {
+  localMaster.me2.override = !localMaster.me2.override;
+  sendToMaster('me2:rule', { override: localMaster.me2.override });
+  syncMe2Buttons();
+});
+
+// ─── 8. HDF-ROM (alle Dateien aus deinem Repo) ──────────────────
+const HDF_ROM = {
+  d:{ file:'d.hdf.rom', ready:'d.ready', label:'D-Basis' },
+  e:{ file:'e.hdf.rom', ready:'e.ready', label:'E-Basis' },
+  i:{ file:'i.hdf.rom', ready:'i.ready', label:'I-Basis' },
+  n:{ file:'n.hdf.rom', ready:'n.ready', label:'N-Basis' },
+  o:{ file:'o.hdf.rom', ready:'o.ready', label:'O-Basis' },
+  r:{ file:'r.hdf.rom', ready:'r.ready', label:'R-Basis' },
+  s:{ file:'s.hdf.rom', ready:'s.ready', label:'S-Basis' },
+  u:{ file:'u.hdf.rom', ready:'u.ready', label:'U-Basis' },
+  w:{ file:'w.hdf.rom', ready:'w.ready', label:'W-Basis' },
+  'axiom':{ file:'axiom.hdf.rom', label:'Axiom' },
+  'axiom.3':{ file:'axiom.3.hdf.rom', label:'Axiom-3' },
+  'freeaxiom':{ file:'freeaxiom.hdf.rom', label:'FreeAxiom' },
+  'freeaxiom.9':{ file:'freeaxiom.9.hdf.rom', label:'FreeAxiom-9' },
+  '81':{ file:'81.hdf.rom', label:'81-Basis' },
+  '729':{ file:'729.js', label:'729-Run' },
+  '3.hit.90':{ file:'3.hit.90.hdf.rom', label:'3-Hit-90' },
+  'asymilation':{ file:'asymilation.hdf.rom', ready:'asymilation.ready', label:'Asymilation' },
+  'desamalasion':{ file:'desamalasion.hdf.rom', label:'Desamalasion' },
+  'zauber.6':{ file:'zauber.6.user.use', label:'Zauber-6' },
+  'bewegung':{ file:'bewegung.ready', label:'Bewegung' },
+  'muss':{ file:'muss.ready', label:'Muss-Ready' },
+};
+
+function resolveHdf(input) {
+  const key = input.trim().toLowerCase().replace('#','');
+  const rom = HDF_ROM[key];
+  if (rom) {
+    return `✅ ${key} · ${rom.file}${rom.ready ? ' · ready:'+rom.ready : ''} · ${rom.label}`;
+  }
+  return `❌ "${key}" nicht im HDF-ROM-Register`;
+}
+
+document.getElementById('hdfBtn').addEventListener('click', () => {
+  const val = document.getElementById('hdfInput').value;
+  const out = resolveHdf(val);
+  document.getElementById('hdfOut').textContent = out;
+  log(out, 'HDF', out.startsWith('✅') ? 'ok' : 'err');
+});
+document.getElementById('hdfInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('hdfBtn').click();
+});
+
+// ─── 9. ZAM- UND KLICK-BUTTONS ───────────────────────────────────
+document.getElementById('btnZamRun').addEventListener('click', () => {
+  const seq = ['LOAD', 'ARBEIT_RUN', 'MAINBOARD', 'DONE'];
+  sendToMaster('zam:run', { sequence: seq, steps: seq });
+  runZamSequence(seq);
+});
+document.getElementById('btnZamStop').addEventListener('click', () => {
+  localMaster.zam = 'idle';
+  updateAll();
+  log('⏸ ZaM gestoppt', 'ZaM', 'warn');
+});
+document.getElementById('btnKlick').addEventListener('click', () => addKlick(1));
+document.getElementById('btnZackReset').addEventListener('click', resetKlick);
+
+// Modus-Buttons
+document.querySelectorAll('#left .me2-buttons button').forEach(b => {
+  b.addEventListener('click', () => {
+    const mode = b.dataset.mode;
+    if (!mode) return;
+    document.querySelectorAll('#left .me2-buttons button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    orbitState.mode = mode;
+    document.getElementById('ovMode').textContent = mode;
+    sendToMaster('arbeit:mode', { mode });
+    log(`Modus: ${mode}`, 'arbeit', 'ok');
+  });
+});
+
+// ─── 10. UPDATE-UI ──────────────────────────────────────────────
+function updateArbeitProgress() {
+  const active = moduleState.filter(m => m.active).length;
+  const progress = active / MODULES.length;
+  document.getElementById('mpActive').textContent = `${active}/${MODULES.length}`;
+  document.getElementById('mpProg').textContent = (progress * 100).toFixed(0) + '%';
+  document.getElementById('mpBar').style.width = (progress * 100) + '%';
+  document.getElementById('ovArbeit').textContent = (progress * 100).toFixed(0) + '%';
+
+  // Respo-Score (0–1)
+  const respo = progress * 0.7 + (localMaster.zack / 10) * 0.3;
+  const respoClamped = Math.min(1, respo);
+  document.getElementById('mpRespo').textContent = respoClamped.toFixed(2);
+  document.getElementById('hdrRespo').textContent = (respoClamped * 100).toFixed(0) + '%';
+  return respoClamped;
+}
+
+function updateAll() {
+  // Header
+  document.getElementById('hdrKlick').textContent = klickCounter;
+  document.getElementById('hdrZack').textContent = zackCounter;
+  document.getElementById('klickCount').textContent = klickCounter;
+  document.getElementById('zackCount').textContent = zackCounter;
+  document.getElementById('klickRemain').textContent = 100 - klickCounter;
+  document.getElementById('ftKlick').textContent = klickCounter;
+  document.getElementById('ftZack').textContent = zackCounter;
+  document.getElementById('zamState').textContent = localMaster.zam;
+  document.getElementById('zamLast').textContent = localMaster.zam === 'idle' ? '–' : 'run#' + (localMaster.zamCount || 1);
+  document.getElementById('klickState').textContent = localMaster.me2.allow ? 'bereit' : 'blockiert';
+  document.getElementById('ledMaster').className = 'led ' + (isMasterConnected ? 'master' : '');
+  updateArbeitProgress();
+  syncMe2Buttons();
+}
+
+// ─── 11. LOG ────────────────────────────────────────────────────
+function log(msg, tag = 'arbeit', type = '') {
+  const box = document.getElementById('logBox');
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  const t = new Date().toLocaleTimeString('de-DE');
+  entry.innerHTML = `<span class="time">[${t}]</span><span class="tag">${tag}</span><span class="${type}">${msg}</span>`;
+  box.appendChild(entry);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 60) box.removeChild(box.firstChild);
+}
+
+// ─── 12. TASTATUR ───────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === ' ') { e.preventDefault(); addKlick(1); }
+  if (e.key === 'r' || e.key === 'R') {
+    if (e.shiftKey) { resetKlick(); }
+    else { orbitState.index = 0; orbitState.history = []; log('⟲ Orbit Reset', 'arbeit', 'warn'); }
+  }
+  if (e.key === 'z' || e.key === 'Z') document.getElementById('btnZamRun').click();
+  if (e.key === 'p' || e.key === 'P') orbitState.running = !orbitState.running;
+  if (e.key === '1') document.querySelector('[data-mode="IQQ"]')?.click();
+  if (e.key === '2') document.querySelector('[data-mode="OCTA"]')?.click();
+  if (e.key === '3') document.querySelector('[data-mode="A81"]')?.click();
+});
+
+// ─── 13. UHR ────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('hdrClock').textContent = '⏱️ ' + new Date().toLocaleTimeString('de-DE');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── 14. ÖFFENTLICHE API ────────────────────────────────────────
+window.ARBEIT = {
+  // Arbeitsstand
+  modules: () => moduleState.map(m => ({ id: m.id, active: m.active })),
+  toggle: toggleModule,
+  progress: () => moduleState.filter(m => m.active).length / MODULES.length,
+
+  // KlicK / ZacK
+  klick: (n = 1) => addKlick(n),
+  resetKlick,
+  state: () => ({
+    klick: klickCounter,
+    zack: zackCounter,
+    mode: orbitState.mode,
+    tick: orbitState.tick,
+    index: orbitState.index,
+    modules: moduleState.filter(m => m.active).length,
+  }),
+
+  // ZaM
+  zam: {
+    run: (steps) => runZamSequence(steps || ['LOAD','ARBEIT_RUN','DONE']),
+  },
+
+  // 2me
+  me2: {
+    setRule: (rule) => {
+      Object.assign(localMaster.me2, rule);
+      sendToMaster('me2:rule', rule);
+      syncMe2Buttons();
+    },
+    allow: () => { localMaster.me2.allow = true; syncMe2Buttons(); },
+    block: () => { localMaster.me2.allow = false; syncMe2Buttons(); },
+  },
+
+  // Zoll
+  zoll: {
+    check: () => localMaster.me2.allow
+      ? { passed: true, reason: 'OK' }
+      : { passed: false, reason: 'Zoll geschlossen' },
+  },
+
+  // HDF
+  hdf: {
+    resolve: resolveHdf,
+    register: HDF_ROM,
+  },
+
+  // Master
+  master: {
+    connected: () => isMasterConnected,
+    state: () => ({ ...localMaster }),
+  },
+};
+
+// ─── 15. INIT ───────────────────────────────────────────────────
+renderModules();
+resizeCanvas();
+updateAll();
+sendToMaster('arbeit:hello', {
+  modules: MODULES.length,
+  activeCount: moduleState.filter(m => m.active).length,
+  ts: Date.now(),
+});
+log('⚙️ ARBEIT · RESPO · INDEX bereit', 'init', 'ok');
+log(`🧩 ${MODULES.length} Module aus brain/ geladen`, 'init');
+log('Kompatibel: KlicK · ZaM · 2me · MAINBOARD · respo-master.js', 'init');
+log('Kanal: iki1uc-orbit · Storage: iki1uc-master-respo', 'init');
+log('Leertaste = KlicK · R = Orbit-Reset · Shift+R = KlicK-Reset · Z = ZaM · 1/2/3 = Modus', 'init', 'warn');
+
+requestAnimationFrame(loop);
+
+console.log('%c⚙️ ARBEIT · RESPO · INDEX geladen', 'color:#b388ff;font-weight:bold');
+console.log('→ window.ARBEIT.klick() · .zam.run() · .me2.setRule() · .progress()');
+</script>
 </body>
 </html>
